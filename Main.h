@@ -2,7 +2,7 @@
 
 #include "Dependencies.h"
 #include "Board.h"
-#include "Pacman.h"
+#include "Entity.h"
 
 
 // ========================================

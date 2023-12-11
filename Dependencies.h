@@ -1,10 +1,11 @@
 #pragma once
 
-//standard C++
+//C++ Libraries
 #include <string>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <queue>
 
 //SFML
 #include <SFML/Graphics.hpp>
@@ -14,6 +15,7 @@
 #include <SFML/System.hpp>
 #include <SFML/OpenGL.hpp>
 #include <SFML/Main.hpp>
+#include <SFML/Graphics/Shape.hpp>
 
 
 using namespace std;

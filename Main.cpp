@@ -5,8 +5,8 @@ int main()
 	RenderWindow window(VideoMode(512, 512), "SFML works!");
 
 	Board currentBoard = Board("maze0.txt");
-	Pacman pacman = Pacman(500, Vector2i(1, 1));
-
+	//Pacman pacman = Pacman(500, Color::Yellow,Vector2i(1, 1));
+	Ghost ghost(500, Color::Red, Vector2i(1, 1));
 
 
 	//===== set time =====//
@@ -30,12 +30,16 @@ int main()
 		}
 
 		window.clear();
-		//window.draw(shape);
+
+		//draw the board
 		currentBoard.DrawBoard(window);
 
-		pacman.Update(deltaTime, currentBoard);
-		window.draw(pacman.GetShape());
+		//update entities
+		//pacman.Update(deltaTime, currentBoard);
+		ghost.Update(deltaTime, currentBoard);
 
+		//draw entities
+		//window.draw(ghost.GetShape());
 
 		window.display();
 	}
