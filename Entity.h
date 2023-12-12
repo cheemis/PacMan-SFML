@@ -190,28 +190,43 @@ public:
 class Ghost : public Entity
 {
 private:
-	queue<Vector2i> path;
+	stack<Vector2i> path;
+
+	Vector2i testPoints[4];
+	int testIndex;
+
 
 	
 	void ChangeTargetCell(Board& currentBoard)
 	{
+		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
 		if (path.size() <= 0)
 		{
 			//recreate a new path
-			targetTile = Vector2i(29, 26);
-			AStar(currentTile, targetTile, currentBoard);
-		}
-		else
-		{
-			//pop an element from the queue
-			Vector2i newTarget = path.front();
-			path.pop();
 
-			//set that popped element to the target cell
-			targetTile = newTarget;
-			percentage = 0;
+			cout << "Astar being used!" ;
 
+			if (!AStar(targetTile, testPoints[testIndex], currentBoard))
+			{
+				//if a path couldn't be found
+				testIndex = (testIndex + 1) % 4;
+				return;
+			}
+			testIndex = (testIndex + 1) % 4;
 		}
+
+		//pop an element from the queue
+		Vector2i newTarget = path.top();
+		path.pop();
+
+		//cout << "(" << to_string(targetTile.x) << ", " << to_string(targetTile.y) << ") ==> (" << to_string(newTarget.x) << ", " << to_string(newTarget.y) << ")" << endl;
+
+		//set that popped element to the target cell
+		currentTile = targetTile;
+		targetTile = newTarget;
+		percentage = 0;
+
 	}
 	
 	bool AStar(Vector2i start, Vector2i goal, Board& currentBoard)
@@ -273,7 +288,7 @@ private:
 					}
 				}
 			}
-			cout << "(" << to_string(currentElement.tile.x) <<  ", " << to_string(currentElement.tile.y) << ") has " << to_string(validNeighbors) << " valid neighbors" << endl;
+			//cout << "(" << to_string(currentElement.tile.x) <<  ", " << to_string(currentElement.tile.y) << ") has " << to_string(validNeighbors) << " valid neighbors" << endl;
 		}
 		cout << "couldn't find target";
 		return false;
@@ -292,45 +307,26 @@ private:
 	void FindPath(Vector2i goal, map<string, Node> &fScores, Board& currentBoard)
 	{
 		Node current = fScores[TileToString(goal)];
-		vector<Vector2i> newPath;
 		while (current.previous)
 		{
-			cout << "(" << current.tile.x << ", " << current.tile.y << ") -- ";
-			newPath.push_back(current.tile);
+			//cout << "(" << current.tile.x << ", " << current.tile.y << ") -- ";
+			path.push(current.tile);
+			Node c = current;
 			current = *current.previous;
 		}
-		cout << "(" << current.tile.x << ", " << current.tile.y << ")" << endl;
-
-
-
-		for (int i = 0; i < ROWS; i++)
-		{
-			for (int j = 0; j < COLUMNS; j++)
-			{
-				if (currentBoard.GetCell(j, i))
-				{
-					if (find(newPath.begin(), newPath.end(), Vector2i(j, i)) != newPath.end())
-					{
-						cout << "o";
-					}
-					else
-					{
-						cout << " ";
-					}
-				}
-				else
-				{
-					cout << "X";
-				}
-			}
-			cout << endl;
-		}
-
+		//cout << "(" << current.tile.x << ", " << current.tile.y << ")" << endl;
 	}
 
 public:
 	Ghost(float speed, Color color, Vector2i startingTile) :
-		Entity(speed, color, startingTile) {}
+		Entity(speed, color, startingTile)
+	{
+		testPoints[0] = Vector2i(29, 26);
+		testPoints[1] = Vector2i(1,1); //these two points don't take most efficient path
+		testPoints[2] = Vector2i(9,22);
+		testPoints[3] = Vector2i(29,1);
+		testIndex = 0;
+	}
 
 	void Update(float deltaTime, Board& currentBoard)
 	{

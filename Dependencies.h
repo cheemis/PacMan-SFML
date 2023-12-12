@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <queue>
+#include <stack>
 
 //SFML
 #include <SFML/Graphics.hpp>

@@ -6,7 +6,7 @@ int main()
 
 	Board currentBoard = Board("maze0.txt");
 	//Pacman pacman = Pacman(500, Color::Yellow,Vector2i(1, 1));
-	Ghost ghost(500, Color::Red, Vector2i(1, 1));
+	Ghost ghost(250, Color::Red, Vector2i(1, 1));
 
 
 	//===== set time =====//
@@ -39,7 +39,7 @@ int main()
 		ghost.Update(deltaTime, currentBoard);
 
 		//draw entities
-		//window.draw(ghost.GetShape());
+		window.draw(ghost.GetShape());
 
 		window.display();
 	}
