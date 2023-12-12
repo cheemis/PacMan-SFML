@@ -25,7 +25,7 @@ using namespace sf;
 namespace fs = std::filesystem;
 
 // ========================================
-// =========== Global Variables  ==========
+// ====== Constant Global Variables  ======
 // ========================================
 
 int const ROWS = 28;

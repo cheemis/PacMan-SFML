@@ -10,7 +10,7 @@ struct QueueElement
 
 	bool operator<(const QueueElement& other) const
 	{
-		return score < other.score;
+		return score > other.score; //reversed to put smallest at front
 	}
 };
 
@@ -38,22 +38,25 @@ protected:
 	Vector2i currentTile;
 	Vector2i targetTile;
 	float percentage;
+
+	//board variables
+	Board* currentBoard;
 	
 	//color
 	Color color;
 
-	void UpdatePosition(float deltaTime, Board& currentBoard)
+	void UpdatePosition(float deltaTime)
 	{
 		//get percentage
 		percentage += (speed * deltaTime) / 100; //divided by 100 to turn into a percentage
 
 		//update target cell
-		if (percentage >= 1) ChangeTargetCell(currentBoard);
+		if (percentage >= 1) ChangeTargetCell();
 
 		MoveTowardsTargetCell();
 	}
 
-	virtual void ChangeTargetCell(Board& currentBoard){}
+	virtual void ChangeTargetCell(){}
 
 	void MoveTowardsTargetCell()
 	{
@@ -82,13 +85,14 @@ protected:
 
 public:
 	//constructor
-	Entity(float speed, Color color, Vector2i startingTile) :
+	Entity(float speed, Color color, Vector2i startingTile, Board* currentBoard) :
 		speed(speed),
 		position(Vector2f(startingTile.x* TILE_OFFSET, startingTile.y* TILE_OFFSET)),
 		currentTile(startingTile),
 		targetTile(startingTile),
 		percentage(0),
-		color(color) {}
+		color(color),
+		currentBoard(currentBoard){}
 
 
 	//getters/setters
@@ -100,8 +104,13 @@ public:
 		return shape;
 	}
 
+	Vector2i GetCurrentTile()
+	{
+		return currentTile;
+	}
+
 	//virtual methods
-	virtual void Update(float deltaTime, Board& currentBoard) {}
+	virtual void Update(float deltaTime) {}
 };
 
 // ========================================
@@ -116,7 +125,7 @@ private:
 
 
 	//functions
-	void ChangeDirection(Board& currentBoard)
+	void ChangeDirection()
 	{
 		int newX = 0;
 		int newY = 0;
@@ -154,16 +163,16 @@ private:
 
 	}
 
-	void ChangeTargetCell(Board& currentBoard)
+	void ChangeTargetCell()
 	{
 		Vector2f futureTarget(targetTile.x + direction.x, targetTile.y + direction.y);
 		percentage = 0;
 
-		cout << "future target: (" << futureTarget.x << ", " << futureTarget.y << ") - " <<
-			(currentBoard.GetCell(futureTarget.x, futureTarget.y) ? "valid" : "wall") << endl;
+		//cout << "future target: (" << futureTarget.x << ", " << futureTarget.y << ") - " <<
+		//	(currentBoard->GetCell(futureTarget.x, futureTarget.y) ? "valid" : "wall") << endl;
 
 		currentTile = targetTile;
-		if (currentBoard.GetCell(futureTarget.x, futureTarget.y))
+		if (currentBoard->GetCell(futureTarget.x, futureTarget.y))
 		{
 			targetTile = Vector2i(targetTile.x + direction.x, targetTile.y + direction.y);
 		}
@@ -171,16 +180,15 @@ private:
 	}
 
 public:
-	Pacman(float speed, Color color, Vector2i startingTile) :
-		Entity(speed, color, startingTile),
+	Pacman(float speed, Color color, Vector2i startingTile, Board* currentBoard) :
+		Entity(speed, color, startingTile, currentBoard),
 		direction(Vector2i(1,0)) {}
 
-	void Update(float deltaTime, Board& currentBoard)
+	void Update(float deltaTime)
 	{
-		ChangeDirection(currentBoard);
-		UpdatePosition(deltaTime, currentBoard);
+		ChangeDirection();
+		UpdatePosition(deltaTime);
 	}
-
 };
 
 // ========================================
@@ -190,31 +198,26 @@ public:
 class Ghost : public Entity
 {
 private:
+	//traversial
 	stack<Vector2i> path;
+	Vector2i direction;
 
+	//other classes
+	Pacman* pacman;
+
+	//ghost variables
+	int ghostType = 0;
+
+
+	//testing
 	Vector2i testPoints[4];
 	int testIndex;
 
 
 	
-	void ChangeTargetCell(Board& currentBoard)
+	void ChangeTargetCell()
 	{
-		_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-		if (path.size() <= 0)
-		{
-			//recreate a new path
-
-			cout << "Astar being used!" ;
-
-			if (!AStar(targetTile, testPoints[testIndex], currentBoard))
-			{
-				//if a path couldn't be found
-				testIndex = (testIndex + 1) % 4;
-				return;
-			}
-			testIndex = (testIndex + 1) % 4;
-		}
+		if (path.size() <= 0) return; //edge case: can't route to player
 
 		//pop an element from the queue
 		Vector2i newTarget = path.top();
@@ -229,17 +232,17 @@ private:
 
 	}
 	
-	bool AStar(Vector2i start, Vector2i goal, Board& currentBoard)
+	bool AStar(Vector2i start, Vector2i goal)
 	{
-		
+		//instantiate data structures
 		priority_queue<QueueElement> openSet;
-		openSet.push(QueueElement(start, GetFScore(start, goal))); //push first element
-
 		map<Vector2i, vector<Vector2i>> cameFrom;
-
 		map<string, Node> visited;
-		visited[TileToString(start)] = Node(start, 0);
 
+		//push first elements
+		openSet.push(QueueElement(start, GetFScore(start, goal))); //push first element
+		visited[TileToString(start)] = Node(start, 0);
+		
 		while (!openSet.empty())
 		{
 			int validNeighbors = 0;
@@ -250,10 +253,12 @@ private:
 			string currentID = TileToString(currentElement.tile);
 			openSet.pop();
 
+			//cout << "Current: (" << currentElement.tile.x << ", " << currentElement.tile.y << "), Score: " << currentElement.score << endl;
+
 			if (currentElement.tile.x == goal.x && currentElement.tile.y == goal.y)
 			{
 				//return the constructed path
-				FindPath(goal, visited, currentBoard);
+				FindPath(goal, visited);
 				return true;
 			}
 			
@@ -267,11 +272,11 @@ private:
 			//push neighbors to array
 			for (int i = 0; i < neighbors.size(); i++)
 			{
-				Vector2i n(neighbors[i]);
-				if (currentBoard.GetCell(n.x, n.y))
+				Vector2i neighbor(neighbors[i]);
+				if (currentBoard->GetCell(neighbor.x, neighbor.y))
 				{
-					int neighboreScore = GetFScore(n, goal);
-					string neighborID = TileToString(n);
+					int neighboreScore = GetFScore(neighbor, goal) + currentElement.score;
+					string neighborID = TileToString(neighbor);
 
 					//if haven't already traversed this space
 					if (!visited.contains(neighborID))
@@ -279,18 +284,23 @@ private:
 						//add this space to the queue
 
 						//set fscore
-						visited[neighborID] = Node(n, &visited[currentID]);
+						visited[neighborID] = Node(neighbor, &visited[currentID]);
 
 						//push this space to the queue
-						int f = GetFScore(n, goal);
-						openSet.push(QueueElement(n, f));
+						openSet.push(QueueElement(neighbor, neighboreScore));
 						validNeighbors++;
 					}
 				}
 			}
+
+			if (validNeighbors > 2)
+			{
+				//return the constructed path
+				FindPath(openSet.top().tile, visited);
+				return true;
+			}
 			//cout << "(" << to_string(currentElement.tile.x) <<  ", " << to_string(currentElement.tile.y) << ") has " << to_string(validNeighbors) << " valid neighbors" << endl;
 		}
-		cout << "couldn't find target";
 		return false;
 	}
 
@@ -304,7 +314,7 @@ private:
 		return abs(current.x - goal.x) + abs(current.y - goal.y);
 	}
 
-	void FindPath(Vector2i goal, map<string, Node> &fScores, Board& currentBoard)
+	void FindPath(Vector2i goal, map<string, Node> &fScores)
 	{
 		Node current = fScores[TileToString(goal)];
 		while (current.previous)
@@ -317,9 +327,38 @@ private:
 		//cout << "(" << current.tile.x << ", " << current.tile.y << ")" << endl;
 	}
 
+	Vector2i GetGoal()
+	{
+		switch (ghostType)
+		{
+		case(0): //Blinky (red)
+			return pacman->GetCurrentTile();
+			break;
+		case(1): //Pinky (pink)
+			return pacman->GetCurrentTile();
+			break;
+		case(2): //Inky (cyan)
+			return pacman->GetCurrentTile();
+			break;
+		case(3): //Clyde (orange)
+			return pacman->GetCurrentTile();
+			break;
+		}
+	}
+
+	Vector2i FindValidTileNear(Vector2i origin)
+	{
+		bool foundValid = false;
+		while (!foundValid)
+		{
+		}
+	}
+
 public:
-	Ghost(float speed, Color color, Vector2i startingTile) :
-		Entity(speed, color, startingTile)
+	Ghost(float speed, Color color, Vector2i startingTile, Board* currentBoard, Pacman* pacman) :
+		Entity(speed, color, startingTile, currentBoard),
+		pacman(pacman),
+		direction(Vector2i(0,0))
 	{
 		testPoints[0] = Vector2i(29, 26);
 		testPoints[1] = Vector2i(1,1); //these two points don't take most efficient path
@@ -328,9 +367,27 @@ public:
 		testIndex = 0;
 	}
 
-	void Update(float deltaTime, Board& currentBoard)
+	void Update(float deltaTime)
 	{
-		UpdatePosition(deltaTime, currentBoard);
+		if (path.size() <= 0)
+		{
+			//recreate a new path
+
+			Vector2i newTargetTile = GetGoal();
+
+			cout << "Astar being used!" << endl;
+
+			
+
+			if (!AStar(targetTile, newTargetTile))
+			{
+				//if a path couldn't be found
+				cout << "couldn't find path!" << endl;
+			}
+			testIndex = (testIndex + 1) % 4;
+		}
+
+		UpdatePosition(deltaTime);
 	}
 };
 
