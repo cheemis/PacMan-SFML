@@ -34,6 +34,9 @@ protected:
 	float speed;
 	Vector2f position;
 
+	//shape variables
+	float radius;
+
 	//traversing variables
 	Vector2i currentTile;
 	Vector2i targetTile;
@@ -55,7 +58,7 @@ protected:
 
 		MoveTowardsTargetCell();
 	}
-
+	
 	virtual void ChangeTargetCell(){}
 
 	void MoveTowardsTargetCell()
@@ -85,8 +88,9 @@ protected:
 
 public:
 	//constructor
-	Entity(float speed, Color color, Vector2i startingTile, Board* currentBoard) :
+	Entity(float speed, float radius, Color color, Vector2i startingTile, Board* currentBoard) :
 		speed(speed),
+		radius(radius),
 		position(Vector2f(startingTile.x* TILE_OFFSET, startingTile.y* TILE_OFFSET)),
 		currentTile(startingTile),
 		targetTile(startingTile),
@@ -98,7 +102,7 @@ public:
 	//getters/setters
 	CircleShape GetShape()
 	{
-		CircleShape shape(TILE_SIZE / 2);
+		CircleShape shape(radius);
 		shape.setPosition(position);
 		shape.setFillColor(color);
 		return shape;
@@ -171,6 +175,8 @@ private:
 		//cout << "future target: (" << futureTarget.x << ", " << futureTarget.y << ") - " <<
 		//	(currentBoard->GetCell(futureTarget.x, futureTarget.y) ? "valid" : "wall") << endl;
 
+		currentBoard->RemovePellet(targetTile); //remove the pellet at that location
+
 		currentTile = targetTile;
 		if (currentBoard->GetCell(futureTarget.x, futureTarget.y))
 		{
@@ -180,8 +186,8 @@ private:
 	}
 
 public:
-	Pacman(float speed, Color color, Vector2i startingTile, Board* currentBoard) :
-		Entity(speed, color, startingTile, currentBoard),
+	Pacman(float speed, float radius, Color color, Vector2i startingTile, Board* currentBoard) :
+		Entity(speed, radius, color, startingTile, currentBoard),
 		direction(Vector2i(1,0)) {}
 
 	void Update(float deltaTime)
@@ -355,8 +361,8 @@ private:
 	}
 
 public:
-	Ghost(float speed, Color color, Vector2i startingTile, Board* currentBoard, Pacman* pacman) :
-		Entity(speed, color, startingTile, currentBoard),
+	Ghost(float speed, float radius, Color color, Vector2i startingTile, Board* currentBoard, Pacman* pacman) :
+		Entity(speed, radius, color, startingTile, currentBoard),
 		pacman(pacman),
 		direction(Vector2i(0,0))
 	{
@@ -377,7 +383,6 @@ public:
 
 			cout << "Astar being used!" << endl;
 
-			
 
 			if (!AStar(targetTile, newTargetTile))
 			{

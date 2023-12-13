@@ -1,8 +1,5 @@
 #pragma once
-
-
-
-
+#include "Dependencies.h"
 
 // ========================================
 // ======== Board Class Definition ========
@@ -12,8 +9,9 @@ class Board
 {
 private:
 	//variables
-	bool boardCharacters[COLUMNS][ROWS];//fliped because SFML is rotated 90
+	int boardCharacters[COLUMNS][ROWS];//fliped because SFML is rotated 90
 	bool functionalBoard;
+	int numPellets;
 
 	//methods
 	bool LoadBoard(string fileName);
@@ -23,6 +21,8 @@ public:
 	//methods
 	Board(string filename);
 	void DrawBoard(RenderWindow& window);
+	void RemovePellet(Vector2i tile);
+	bool StillHasPellets();
 	bool GetCell(int row, int col);
 };
 
@@ -65,17 +65,27 @@ bool Board::LoadBoard(string fileName)
 		//if proper file, fill out board
 		for (int col = 0; col < COLUMNS; col++)
 		{
-			//if there's a wall at this location
-			if (outputString[col] == 'x')
+			char c = outputString[col];
+			switch (c)
 			{
-				boardCharacters[col][currentRow] = false;//fliped because SFML is rotated 90
-			}
-			//else, there's a free space at this location
-			else
-			{
-				boardCharacters[col][currentRow] = true;//fliped because SFML is rotated 90
+			case 'x': //wall
+				cout << 'x';
+				boardCharacters[col][currentRow] = 0;//fliped because SFML is rotated 90
+				break;
+
+			default: //empty space
+				cout << ' ';
+				boardCharacters[col][currentRow] = 1;
+				break;
+
+			case '.': //pellet
+				cout << '.';
+				boardCharacters[col][currentRow] = 2;
+				numPellets++;
+				break;
 			}
 		}
+		cout << endl;
 		currentRow++;
 	}
 	boardFile.close();
@@ -92,6 +102,7 @@ bool Board::LoadBoard(string fileName)
 
 Board::Board(string filename)
 {
+	numPellets = 0;
 	functionalBoard = LoadBoard(filename);
 }
 
@@ -103,18 +114,52 @@ void Board::DrawBoard(RenderWindow& window)
 	{
 		for (int col = 0; col < COLUMNS; col++)
 		{
-			if (!boardCharacters[col][row]) //fliped because SFML is rotated 90
+			int cell = boardCharacters[col][row];
+			RectangleShape tile;
+
+			switch(cell)
 			{
-				RectangleShape tile(Vector2(TILE_SIZE, TILE_SIZE));
+			case 0: //wall
+				//cout << 'x';
+				tile.setSize(Vector2f(TILE_SIZE, TILE_SIZE));
+				tile.setPosition(col * TILE_OFFSET, row * TILE_OFFSET);
 				tile.setFillColor(WALL_COLOR);
-				tile.setPosition(col * TILE_OFFSET, row * TILE_OFFSET);//fliped because SFML is rotated 90
 				window.draw(tile);
+				break;
+
+			default: //empty space
+				break;
+
+			case 2: //pellet
+				//cout << '.';
+				tile.setSize(Vector2f(TILE_SIZE/4, TILE_SIZE/4));
+				tile.setPosition(col * TILE_OFFSET + (TILE_SIZE/2),
+								 row * TILE_OFFSET + (TILE_SIZE/2));
+				tile.setFillColor(PELLET_COLOR);
+				window.draw(tile);
+				break;
 			}
 		}
 	}
+}
+
+void Board::RemovePellet(Vector2i tile)
+{
+	if (boardCharacters[tile.x][tile.y] == 2)
+	{
+		numPellets--;
+		boardCharacters[tile.x][tile.y] = 1;
+		cout << "pellets left: " << numPellets << endl;
+	}
+}
+
+bool Board::StillHasPellets()
+{
+	return numPellets > 0;
 }
 
 bool Board::GetCell(int row, int col)
 {
 	return boardCharacters[row][col];
 }
+
