@@ -1,3 +1,4 @@
+/*
 #pragma once
 #include "Dependencies.h"
 #include "Entity.h"
@@ -71,3 +72,4 @@ public:
 
 
 };
+*/

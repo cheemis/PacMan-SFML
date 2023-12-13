@@ -1,7 +1,12 @@
 #pragma once
+
 #include "Dependencies.h"
 #include "Board.h"
 
+
+// ========================================
+// ==== Queue Element Class Definition ====
+// ========================================
 
 struct QueueElement
 {
@@ -18,8 +23,8 @@ struct Node
 {
 	Vector2i tile;
 	Node* previous;
+	int neighbors;
 };
-
 
 
 // ========================================
@@ -113,6 +118,16 @@ public:
 		return currentTile;
 	}
 
+	Vector2f GetPosition()
+	{
+		return position;
+	}
+
+	float GetRadius()
+	{
+		return radius;
+	}
+
 	//virtual methods
 	virtual void Update(float deltaTime) {}
 };
@@ -126,6 +141,9 @@ class Pacman : public Entity
 private:
 	//movement variables
 	Vector2i direction;
+
+	//
+	bool isAlive;
 
 
 	//functions
@@ -178,7 +196,7 @@ private:
 		currentBoard->RemovePellet(targetTile); //remove the pellet at that location
 
 		currentTile = targetTile;
-		if (currentBoard->GetCell(futureTarget.x, futureTarget.y))
+		if (currentBoard->GetTile(futureTarget.x, futureTarget.y))
 		{
 			targetTile = Vector2i(targetTile.x + direction.x, targetTile.y + direction.y);
 		}
@@ -188,12 +206,23 @@ private:
 public:
 	Pacman(float speed, float radius, Color color, Vector2i startingTile, Board* currentBoard) :
 		Entity(speed, radius, color, startingTile, currentBoard),
-		direction(Vector2i(1,0)) {}
+		direction(Vector2i(1,0)),
+		isAlive(true) {}
 
 	void Update(float deltaTime)
 	{
 		ChangeDirection();
 		UpdatePosition(deltaTime);
+	}
+
+	bool GetIsAlive()
+	{
+		return isAlive;
+	}
+
+	void SetIsAlive(bool newState)
+	{
+		isAlive = newState;
 	}
 };
 
@@ -214,192 +243,27 @@ private:
 	//ghost variables
 	int ghostType = 0;
 
+	//prototypes
+	void ChangeTargetCell();
 
-	//testing
-	Vector2i testPoints[4];
-	int testIndex;
+	bool AStar(Vector2i start, Vector2i goal);
+	int GetFScore(Vector2i current, Vector2i goal);
+	void FindPath(Vector2i goal, map<string, Node>& fScores);
+	Vector2i GetGoal();
 
-
-	
-	void ChangeTargetCell()
-	{
-		if (path.size() <= 0) return; //edge case: can't route to player
-
-		//pop an element from the queue
-		Vector2i newTarget = path.top();
-		path.pop();
-
-		//cout << "(" << to_string(targetTile.x) << ", " << to_string(targetTile.y) << ") ==> (" << to_string(newTarget.x) << ", " << to_string(newTarget.y) << ")" << endl;
-
-		//set that popped element to the target cell
-		currentTile = targetTile;
-		targetTile = newTarget;
-		percentage = 0;
-
-	}
-	
-	bool AStar(Vector2i start, Vector2i goal)
-	{
-		//instantiate data structures
-		priority_queue<QueueElement> openSet;
-		map<Vector2i, vector<Vector2i>> cameFrom;
-		map<string, Node> visited;
-
-		//push first elements
-		openSet.push(QueueElement(start, GetFScore(start, goal))); //push first element
-		visited[TileToString(start)] = Node(start, 0);
-		
-		while (!openSet.empty())
-		{
-			int validNeighbors = 0;
-
-			//get the leading element
-			QueueElement currentElement = openSet.top();
-			int currentScore = GetFScore(currentElement.tile, goal);
-			string currentID = TileToString(currentElement.tile);
-			openSet.pop();
-
-			//cout << "Current: (" << currentElement.tile.x << ", " << currentElement.tile.y << "), Score: " << currentElement.score << endl;
-
-			if (currentElement.tile.x == goal.x && currentElement.tile.y == goal.y)
-			{
-				//return the constructed path
-				FindPath(goal, visited);
-				return true;
-			}
-			
-			//get valid neighbors
-			vector<Vector2i> neighbors;
-			neighbors.push_back(Vector2i(currentElement.tile.x + 1, currentElement.tile.y));
-			neighbors.push_back(Vector2i(currentElement.tile.x - 1, currentElement.tile.y));
-			neighbors.push_back(Vector2i(currentElement.tile.x, currentElement.tile.y + 1));
-			neighbors.push_back(Vector2i(currentElement.tile.x, currentElement.tile.y - 1));
-
-			//push neighbors to array
-			for (int i = 0; i < neighbors.size(); i++)
-			{
-				Vector2i neighbor(neighbors[i]);
-				if (currentBoard->GetCell(neighbor.x, neighbor.y))
-				{
-					int neighboreScore = GetFScore(neighbor, goal) + currentElement.score;
-					string neighborID = TileToString(neighbor);
-
-					//if haven't already traversed this space
-					if (!visited.contains(neighborID))
-					{
-						//add this space to the queue
-
-						//set fscore
-						visited[neighborID] = Node(neighbor, &visited[currentID]);
-
-						//push this space to the queue
-						openSet.push(QueueElement(neighbor, neighboreScore));
-						validNeighbors++;
-					}
-				}
-			}
-
-			if (validNeighbors > 2)
-			{
-				//return the constructed path
-				FindPath(openSet.top().tile, visited);
-				return true;
-			}
-			//cout << "(" << to_string(currentElement.tile.x) <<  ", " << to_string(currentElement.tile.y) << ") has " << to_string(validNeighbors) << " valid neighbors" << endl;
-		}
-		return false;
-	}
-
-	string TileToString(Vector2i tile)
-	{
-		return to_string(tile.x) + "," + to_string(tile.y);
-	}
-	
-	int GetFScore(Vector2i current, Vector2i goal)
-	{
-		return abs(current.x - goal.x) + abs(current.y - goal.y);
-	}
-
-	void FindPath(Vector2i goal, map<string, Node> &fScores)
-	{
-		Node current = fScores[TileToString(goal)];
-		while (current.previous)
-		{
-			//cout << "(" << current.tile.x << ", " << current.tile.y << ") -- ";
-			path.push(current.tile);
-			Node c = current;
-			current = *current.previous;
-		}
-		//cout << "(" << current.tile.x << ", " << current.tile.y << ")" << endl;
-	}
-
-	Vector2i GetGoal()
-	{
-		switch (ghostType)
-		{
-		case(0): //Blinky (red)
-			return pacman->GetCurrentTile();
-			break;
-		case(1): //Pinky (pink)
-			return pacman->GetCurrentTile();
-			break;
-		case(2): //Inky (cyan)
-			return pacman->GetCurrentTile();
-			break;
-		case(3): //Clyde (orange)
-			return pacman->GetCurrentTile();
-			break;
-		}
-	}
-
-	Vector2i FindValidTileNear(Vector2i origin)
-	{
-		bool foundValid = false;
-		while (!foundValid)
-		{
-		}
-	}
+	string TileToString(Vector2i tile);
+	void FindValidTileNear(Vector2i origin);
+	void CheckCollision();
 
 public:
 	Ghost(float speed, float radius, Color color, Vector2i startingTile, Board* currentBoard, Pacman* pacman) :
 		Entity(speed, radius, color, startingTile, currentBoard),
 		pacman(pacman),
-		direction(Vector2i(0,0))
-	{
-		testPoints[0] = Vector2i(29, 26);
-		testPoints[1] = Vector2i(1,1); //these two points don't take most efficient path
-		testPoints[2] = Vector2i(9,22);
-		testPoints[3] = Vector2i(29,1);
-		testIndex = 0;
-	}
+		direction(Vector2i(0,0)) {}
 
-	void Update(float deltaTime)
-	{
-		if (path.size() <= 0)
-		{
-			//recreate a new path
-
-			Vector2i newTargetTile = GetGoal();
-
-			cout << "Astar being used!" << endl;
-
-
-			if (!AStar(targetTile, newTargetTile))
-			{
-				//if a path couldn't be found
-				cout << "couldn't find path!" << endl;
-			}
-			testIndex = (testIndex + 1) % 4;
-		}
-
-		UpdatePosition(deltaTime);
-	}
+	void Update(float deltaTime);
 };
 
-
-// ========================================
-// ==== Queue Element Class Definition ====
-// ========================================
 
 
 

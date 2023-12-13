@@ -12,8 +12,6 @@ int main()
 					   Ghost(500, (TILE_SIZE * .5f), Color::Cyan, Vector2i(1, 26), &currentBoard, &pacman),
 					   Ghost(500, (TILE_SIZE * .5f), Color::Magenta, Vector2i(29, 1), &currentBoard, &pacman)};
 
-	//CollisionManager cm(10, &pacman);
-
 
 	//===== set time =====//
 	Clock deltaSrc;
@@ -37,19 +35,23 @@ int main()
 
 		window.clear();
 
+		//check if pacman died
+		if (!pacman.GetIsAlive())
+		{
+			return 0;
+		}
+
 		//draw the board
 		currentBoard.DrawBoard(window);
 
 		//update entities
 		pacman.Update(deltaTime);
-		//for (int i = 0; i < NUM_GHOSTS; i++) ghosts[i].Update(deltaTime);
-		//for(Ghost g : ghosts) g.Update(deltaTime);
+		for (int i = 0; i < NUM_GHOSTS; i++) ghosts[i].Update(deltaTime);
 
 		//draw entities
 		window.draw(pacman.GetShape());
-		//for (int i = 0; i < NUM_GHOSTS; i++) window.draw(ghosts[i].GetShape());
+		for (int i = 0; i < NUM_GHOSTS; i++) window.draw(ghosts[i].GetShape());
 
-		//cm.Update(deltaTime);
 
 		if (!currentBoard.StillHasPellets()) return 0;
 

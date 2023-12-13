@@ -64,3 +64,8 @@ x64/Debug/vc143.pdb
 .vs/PacMan/FileContentIndex/7095c19f-b338-42f4-aa02-977353ce0e3d.vsidx
 .vs/PacMan/FileContentIndex/3fee1340-20e5-48c7-8b3f-28f4843a0cf7.vsidx
 .vs/PacMan/FileContentIndex/02beabda-4af9-4c67-9053-50a37be656c5.vsidx
+*.ipch
+*.vsidx
+x64/Debug/Board.obj
+x64/Debug/Ghost.obj
+x64/Debug/PacMan.Build.CppClean.log
