@@ -93,9 +93,9 @@ protected:
 
 public:
 	//constructor
-	Entity(float speed, float radius, Color color, Vector2i startingTile, Board* currentBoard) :
+	Entity(float speed, Color color, Vector2i startingTile, Board* currentBoard) :
 		speed(speed),
-		radius(radius),
+		radius(ENTITY_RADIUS),
 		position(Vector2f(startingTile.x* TILE_OFFSET, startingTile.y* TILE_OFFSET)),
 		currentTile(startingTile),
 		targetTile(startingTile),
@@ -157,20 +157,22 @@ private:
 
 	//life variables
 	bool isAlive;
-
+	float shrinkTime;
 
 	//functions
 	void ChangeDirection();
 	void ChangeTargetCell();
-
+	
 public:
-	Pacman(float speed, float radius, Color color, Vector2i startingTile, Board* currentBoard) :
-		Entity(speed, radius, color, startingTile, currentBoard),
+	Pacman(float speed, Color color, Vector2i startingTile, Board* currentBoard) :
+		Entity(speed, color, startingTile, currentBoard),
 		direction(Vector2i(1,0)),
-		isAlive(true) {}
+		isAlive(true),
+		shrinkTime(10 * DEATH_TIME/2){}
 
 	void Update(float deltaTime);
 	void ResetEntity(Vector2i newHome, Board* newBoard);
+	void Dying(float deltaTime);
 
 	bool GetIsAlive();
 	Vector2i GetDirection();
@@ -209,8 +211,8 @@ private:
 	void CheckCollision();
 
 public:
-	Ghost(float speed, float radius, int ghostType, Color color, Vector2i startingTile, Board* currentBoard, Pacman* pacman) :
-		Entity(speed, radius, color, startingTile, currentBoard),
+	Ghost(float speed, int ghostType, Color color, Vector2i startingTile, Board* currentBoard, Pacman* pacman) :
+		Entity(speed, color, startingTile, currentBoard),
 		pacman(pacman),
 		direction(Vector2i(0, 0)),
 		ghostType(ghostType),

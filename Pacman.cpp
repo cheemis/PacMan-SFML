@@ -56,7 +56,6 @@ void Pacman::ChangeTargetCell()
 	{
 		targetTile = Vector2i(targetTile.x + direction.x, targetTile.y + direction.y);
 	}
-
 }
 
 
@@ -75,6 +74,12 @@ void Pacman::ResetEntity(Vector2i newHome, Board* newBoard)
 {
 	Entity::ResetEntity(newHome, newBoard);
 	isAlive = true;
+	radius = ENTITY_RADIUS;
+}
+
+void Pacman::Dying(float deltaTime)
+{
+	radius = clamp(radius - shrinkTime * deltaTime, 0.0f, TILE_SIZE);
 }
 
 Vector2i Pacman::GetDirection()

@@ -29,9 +29,14 @@ bool StartGame(Board *currentBoard, Pacman *pacman, Ghost ghosts[])
 
 }
 
+
+// Return values:
+// 0: nothing significant happened
+// 1: pacman died
+// 2: the board ran out of pellets
+// 
 int PlayGame(RenderWindow& window, Board* currentBoard, Pacman* pacman, Ghost ghosts[], float deltaTime)
 {
-
 	//check if pacman died
 	if (!pacman->GetIsAlive())
 	{
@@ -53,6 +58,55 @@ int PlayGame(RenderWindow& window, Board* currentBoard, Pacman* pacman, Ghost gh
 	return 0;
 }
 
+bool GameOutcome(int &gameState, int gameStatus, int &currentBoard,
+				 float &timeToDeath,
+				 Board boards[],
+				 Pacman *pacman, Ghost ghosts[])
+{
+	switch (gameStatus)
+	{
+	case 0: //nothing significant happened
+		break;
+	case 1: //pacman dies
+		timeToDeath = DEATH_TIME;
+		gameState = 3;
+		break;
+	case 2: // all pellets collected
+		currentBoard = (currentBoard + 1) % 3;
+		if (!StartGame(&boards[currentBoard], pacman, ghosts)) return false; //break if one of the boards has been modified
+		break;
+	default:
+		//something broke
+		return false;
+		break;
+	}
+	return true;
+}
+
+bool Dying(RenderWindow& window, Board* currentBoard, Pacman* pacman, Ghost ghosts[], float& timeToDeath,float deltaTime)
+{
+	//update management
+	timeToDeath -= deltaTime;
+
+	//update pacman
+	pacman->Dying(deltaTime);
+
+	//update entities
+	window.draw(pacman->GetShape());
+
+	if (timeToDeath <= 0)
+	{
+		//reset entities
+		pacman->ResetEntity(currentBoard->GetStartingPosition(0), currentBoard);
+		for (int i = 0; i < 4; i++)
+		{
+			ghosts[i].ResetEntity(currentBoard->GetStartingPosition(i + 1), currentBoard);
+		}
+		return true;
+	}
+	return false;
+}
+
 void GameOver()
 {
 
@@ -72,12 +126,12 @@ int main()
 					   Board("maze2.txt", WALL_COLOR3)};
 	int currentBoard = -1;
 
-	Pacman pacman = Pacman(500, (TILE_SIZE * .5f),Color::Yellow, boards[0].GetStartingPosition(0), &boards[0]);
+	Pacman pacman = Pacman(500,Color::Yellow, boards[0].GetStartingPosition(0), &boards[0]);
 
-	Ghost ghosts[] = { Ghost(100, (TILE_SIZE * .5f), 0, Color::Red, boards[0].GetStartingPosition(1), &boards[0], &pacman),
-					   Ghost(100, (TILE_SIZE * .5f), 1,Color::Cyan, boards[0].GetStartingPosition(2), &boards[0], &pacman),
-					   Ghost(100, (TILE_SIZE * .5f), 2, Color::Magenta, boards[0].GetStartingPosition(3), &boards[0], &pacman),
-					   Ghost(100, (TILE_SIZE * .5f), 3, Color(255, 184,71), boards[0].GetStartingPosition(4), &boards[0], &pacman)};
+	Ghost ghosts[] = { Ghost(100, 0, Color::Red, boards[0].GetStartingPosition(1), &boards[0], &pacman),
+					   Ghost(100, 1,Color::Cyan, boards[0].GetStartingPosition(2), &boards[0], &pacman),
+					   Ghost(100, 2, Color::Magenta, boards[0].GetStartingPosition(3), &boards[0], &pacman),
+					   Ghost(100, 3, Color(255, 184,71), boards[0].GetStartingPosition(4), &boards[0], &pacman)};
 
 
 	// ============== UI Variables ============= //
@@ -94,6 +148,7 @@ int main()
 	// =========== Managing Variables ========== //
 
 	int gameState = 1;
+	float timeToDeath = 0;
 
 
 
@@ -126,7 +181,10 @@ int main()
 
 		switch (gameState)
 		{
-		case 1:
+			int gameStatus;
+			bool gameWorking;
+
+		case 1: //title screen
 			StartScreen(window, gameState, titleText, subTitle);
 			if (gameState == 2) //start the next round
 			{
@@ -134,19 +192,18 @@ int main()
 				if (!StartGame(&boards[currentBoard], &pacman, ghosts)) return 0; //break if one of the boards has been modified
 			}
 			break;
-		case 2:
-			int gameStatus = PlayGame(window, &boards[currentBoard], &pacman, ghosts, deltaTime);
-			switch (gameStatus)
+		case 2: //play the game
+			gameStatus = PlayGame(window, &boards[currentBoard], &pacman, ghosts, deltaTime);
+			gameWorking = GameOutcome(gameState, gameStatus, currentBoard, timeToDeath, boards, &pacman, ghosts);
+			if (!gameWorking) return 0;
+			break;
+		case 3: //dying
+			if (Dying(window, &boards[currentBoard], &pacman, ghosts, timeToDeath, deltaTime))
 			{
-			case 1: //pacman dies
-				return 0;
-				break;
-			case 2: // all pellets collected
-				currentBoard = (currentBoard + 1) % 3;
-				if (!StartGame(&boards[currentBoard], &pacman, ghosts)) return 0; //break if one of the boards has been modified
-				break;
+				gameState = 2;
 			}
 			break;
+
 		}
 
 
