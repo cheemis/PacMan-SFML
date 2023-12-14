@@ -69,3 +69,4 @@ x64/Debug/vc143.pdb
 x64/Debug/Board.obj
 x64/Debug/Ghost.obj
 x64/Debug/PacMan.Build.CppClean.log
+*.obj

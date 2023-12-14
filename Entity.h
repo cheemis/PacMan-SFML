@@ -49,6 +49,7 @@ protected:
 
 	//board variables
 	Board* currentBoard;
+	Vector2i home;
 	
 	//color
 	Color color;
@@ -90,7 +91,6 @@ protected:
 		return tile * TILE_OFFSET;
 	}
 
-
 public:
 	//constructor
 	Entity(float speed, float radius, Color color, Vector2i startingTile, Board* currentBoard) :
@@ -101,7 +101,20 @@ public:
 		targetTile(startingTile),
 		percentage(0),
 		color(color),
-		currentBoard(currentBoard){}
+		currentBoard(currentBoard),
+		home(startingTile){}
+
+	virtual void ResetEntity(Vector2i newHome, Board* newBoard)
+	{
+		position = Vector2f(newHome.x * TILE_OFFSET, newHome.y * TILE_OFFSET);
+		currentTile = newHome;
+		targetTile = newHome;
+		home = newHome;
+
+		percentage = 0;
+
+		currentBoard = newBoard;
+	}
 
 
 	//getters/setters
@@ -142,66 +155,13 @@ private:
 	//movement variables
 	Vector2i direction;
 
-	//
+	//life variables
 	bool isAlive;
 
 
 	//functions
-	void ChangeDirection()
-	{
-		int newX = 0;
-		int newY = 0;
-
-
-		//go up
-		if (Keyboard::isKeyPressed(Keyboard::W))
-		{
-			newY = -1;
-		}
-		//go down
-		else if (Keyboard::isKeyPressed(Keyboard::S))
-		{
-			newY = 1;
-		}
-
-		//go right
-		if (Keyboard::isKeyPressed(Keyboard::D))
-		{
-			newX = 1;
-			newY = 0;
-		}
-		//go left
-		else if (Keyboard::isKeyPressed(Keyboard::A))
-		{
-			newX = -1;
-			newY = 0;
-		}
-
-		//if the player pressed a key, change direction
-		if (newX || newY)
-		{
-			direction = Vector2i(newX, newY);
-		}
-
-	}
-
-	void ChangeTargetCell()
-	{
-		Vector2f futureTarget(targetTile.x + direction.x, targetTile.y + direction.y);
-		percentage = 0;
-
-		//cout << "future target: (" << futureTarget.x << ", " << futureTarget.y << ") - " <<
-		//	(currentBoard->GetCell(futureTarget.x, futureTarget.y) ? "valid" : "wall") << endl;
-
-		currentBoard->RemovePellet(targetTile); //remove the pellet at that location
-
-		currentTile = targetTile;
-		if (currentBoard->GetTile(futureTarget.x, futureTarget.y))
-		{
-			targetTile = Vector2i(targetTile.x + direction.x, targetTile.y + direction.y);
-		}
-
-	}
+	void ChangeDirection();
+	void ChangeTargetCell();
 
 public:
 	Pacman(float speed, float radius, Color color, Vector2i startingTile, Board* currentBoard) :
@@ -209,21 +169,13 @@ public:
 		direction(Vector2i(1,0)),
 		isAlive(true) {}
 
-	void Update(float deltaTime)
-	{
-		ChangeDirection();
-		UpdatePosition(deltaTime);
-	}
+	void Update(float deltaTime);
+	void ResetEntity(Vector2i newHome, Board* newBoard);
 
-	bool GetIsAlive()
-	{
-		return isAlive;
-	}
+	bool GetIsAlive();
+	Vector2i GetDirection();
 
-	void SetIsAlive(bool newState)
-	{
-		isAlive = newState;
-	}
+	void SetIsAlive(bool newState);
 };
 
 // ========================================
@@ -241,7 +193,8 @@ private:
 	Pacman* pacman;
 
 	//ghost variables
-	int ghostType = 0;
+	int ghostType;
+	bool randomPathing;
 
 	//prototypes
 	void ChangeTargetCell();
@@ -252,14 +205,20 @@ private:
 	Vector2i GetGoal();
 
 	string TileToString(Vector2i tile);
-	void FindValidTileNear(Vector2i origin);
+	Vector2i FindValidTileNear(Vector2i pacLocation, Vector2i offset, int multiplier);
 	void CheckCollision();
 
 public:
-	Ghost(float speed, float radius, Color color, Vector2i startingTile, Board* currentBoard, Pacman* pacman) :
+	Ghost(float speed, float radius, int ghostType, Color color, Vector2i startingTile, Board* currentBoard, Pacman* pacman) :
 		Entity(speed, radius, color, startingTile, currentBoard),
 		pacman(pacman),
-		direction(Vector2i(0,0)) {}
+		direction(Vector2i(0, 0)),
+		ghostType(ghostType),
+		randomPathing(ghostType == 3){};
+
+	void ResetEntity(Vector2i newHome, Board* newBoard);
+
+	Vector2i GetRandomSpace();
 
 	void Update(float deltaTime);
 };

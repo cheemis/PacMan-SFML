@@ -8,18 +8,37 @@
 
 void Ghost::ChangeTargetCell()
 {
-	if (path.size() <= 0) return; //edge case: can't route to player
+	Vector2i newTarget;
 
-	//pop an element from the queue
-	Vector2i newTarget = path.top();
-	path.pop();
+	if (path.size() <= 0) //edge case: can't route to player
+	{
+		//recreate a new path
+		Vector2i newTargetTile = GetGoal();
+		bool foundPath = AStar(targetTile, newTargetTile);
+		randomPathing = true;
 
-	//cout << "(" << to_string(targetTile.x) << ", " << to_string(targetTile.y) << ") ==> (" << to_string(newTarget.x) << ", " << to_string(newTarget.y) << ")" << endl;
+		while(!foundPath)
+		{
+			foundPath = AStar(targetTile, GetRandomSpace());
+		}
 
-	//set that popped element to the target cell
-	currentTile = targetTile;
-	targetTile = newTarget;
-	percentage = 0;
+		if (ghostType != 3) randomPathing = false;
+		percentage = clamp(percentage, 0.0f, 1.0f);
+	}
+	else
+	{
+		newTarget = path.top();
+
+		//pop an element from the queue
+
+		path.pop();
+
+		//set that popped element to the target cell
+		currentTile = targetTile;
+		targetTile = newTarget;
+		percentage = 0;
+	}
+	
 }
 
 
@@ -102,6 +121,17 @@ void Ghost::FindPath(Vector2i goal, map<string, Node>& fScores)
 	Node current = fScores[TileToString(goal)];
 	stack<Node> nodeStack;
 
+	//if ghost should complete full path search
+	if (randomPathing)
+	{
+		while (current.previous)
+		{
+			path.push(current.tile);
+			current = *current.previous;
+		}
+		return;
+	}
+
 	//reverse list of nodes
 	while (current.previous)
 	{
@@ -130,15 +160,37 @@ Vector2i Ghost::GetGoal()
 		return pacman->GetCurrentTile();
 		break;
 	case(1): //Pinky (pink)
-		return pacman->GetCurrentTile();
+		return FindValidTileNear(pacman->GetCurrentTile(),
+								 -pacman->GetDirection(), 5);
 		break;
 	case(2): //Inky (cyan)
-		return pacman->GetCurrentTile();
-		break;
+		return FindValidTileNear(pacman->GetCurrentTile(),
+								 pacman->GetDirection(), 5);
 	case(3): //Clyde (orange)
-		return pacman->GetCurrentTile();
+		return GetRandomSpace();
 		break;
 	}
+}
+
+void Ghost::ResetEntity(Vector2i newHome, Board* newBoard)
+{
+	Entity::ResetEntity(newHome, newBoard);
+	while (!path.empty()) path.pop();
+
+}
+
+Vector2i Ghost::GetRandomSpace()
+{
+	int row = 0;
+	int col = 0;
+
+	do
+	{
+		row = (1.0f * rand() / RAND_MAX) * COLUMNS;
+		col = (1.0f * rand() / RAND_MAX) * ROWS;
+	} while (!currentBoard->GetTile(row, col) &&
+			(row != currentTile.x && col != currentTile.y));
+	return Vector2i(row, col);
 }
 
 
@@ -165,12 +217,16 @@ string Ghost::TileToString(Vector2i tile)
 	return to_string(tile.x) + "," + to_string(tile.y);
 }
 
-void Ghost::FindValidTileNear(Vector2i origin)
+Vector2i Ghost::FindValidTileNear(Vector2i pacLocation, Vector2i offset, int multiplier)
 {
-	bool foundValid = false;
-	while (!foundValid)
+	Vector2i target = pacLocation + offset * multiplier;
+
+	while (!currentBoard->GetTile(target.x, target.y))
 	{
+		if (targetTile == target) break; //base case
+		target -= offset;
 	}
+	return target;
 }
 
 
@@ -181,21 +237,6 @@ void Ghost::FindValidTileNear(Vector2i origin)
 
 void Ghost::Update(float deltaTime)
 {
-	if (path.size() <= 0)
-	{
-		//recreate a new path
-
-		Vector2i newTargetTile = GetGoal();
-
-		if (!AStar(targetTile, newTargetTile))
-		{
-			//if a path couldn't be found
-			cout << "couldn't find path!" << endl;
-		}
-	}
-
 	UpdatePosition(deltaTime);
 	CheckCollision();
-
-
 }
