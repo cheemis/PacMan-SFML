@@ -63,6 +63,18 @@ bool Board::LoadBoard(string fileName)
 				boardCharacters[col][currentRow] = 2;
 				numPellets++;
 				break;
+			case 'o': //pellet
+				cout << 'o';
+				boardCharacters[col][currentRow] = 3;
+				powerPellets --;
+				break;
+
+			case '-': //barrier
+				cout << '.';
+				boardCharacters[col][currentRow] = 4;
+				numPellets++;
+				break;
+
 			case 'P': //Pacman
 				cout << 'P';
 				if (pacman) return false;
@@ -98,8 +110,6 @@ bool Board::LoadBoard(string fileName)
 		cout << endl;
 		currentRow++;
 	}
-	cout << "pellets: " << numPellets << endl;
-	cout << "pellets: " << numPellets << endl;
 	boardFile.close();
 	return pacman && blinky && pinky && inky && clyde;
 }
@@ -109,14 +119,21 @@ bool Board::LoadBoard(string fileName)
 // ======== Public Board Functions ========
 // ========================================
 
-Board::Board(string filename, Color color)
+Board::Board(string filename, Color color, MyScore* score)
 {
 	this->filename = filename;
 	this->color = color;
 
 	numPellets = 0;
 	functionalBoard = LoadBoard(filename);
+
+	this->score = score;
 }
+
+//void Board::SetGhosts(Ghost ghosts[4])
+//{
+//	ghosts = ghosts;
+//}
 
 bool Board::ResetBoard()
 {
@@ -124,7 +141,7 @@ bool Board::ResetBoard()
 	return LoadBoard(filename);
 }
 
-void Board::DrawBoard(RenderWindow& window)
+void Board::DrawBoard(RenderWindow& window, bool colored)
 {
 	if (!functionalBoard) return;
 
@@ -140,7 +157,7 @@ void Board::DrawBoard(RenderWindow& window)
 			case 0: //wall
 				tile.setSize(Vector2f(TILE_SIZE, TILE_SIZE));
 				tile.setPosition(col * TILE_OFFSET, row * TILE_OFFSET);
-				tile.setFillColor(color);
+				tile.setFillColor(colored ? color : Color::White);
 				window.draw(tile);
 				break;
 
@@ -154,25 +171,46 @@ void Board::DrawBoard(RenderWindow& window)
 				tile.setFillColor(PELLET_COLOR);
 				window.draw(tile);
 				break;
+
+			case 3: //power pellet
+				tile.setSize(Vector2f(TILE_SIZE / 2, TILE_SIZE / 2));
+				tile.setPosition(col * TILE_OFFSET + (TILE_SIZE / 4),
+					row * TILE_OFFSET + (TILE_SIZE / 4));
+				tile.setFillColor(POWER_COLOR);
+				window.draw(tile);
+				break;
 			}
 		}
 	}
 }
 
 
-void Board::RemovePellet(Vector2i tile)
+int Board::RemovePellet(Vector2i tile)
 {
-	if (boardCharacters[tile.x][tile.y] == 2)
+	int currentTile = boardCharacters[tile.x][tile.y];
+
+	switch (currentTile)
 	{
+	case 2: //regular pellet
+		score->IncreaseScore(PELLET_POINTS);
 		numPellets--;
 		boardCharacters[tile.x][tile.y] = 1;
 		cout << "Pellets left: " << numPellets << endl;
+		break;
+	case 3: //power pellet
+		score->IncreaseScore(POWER_POINTS);
+		boardCharacters[tile.x][tile.y] = 1;
+		cout << "power pellet collected!" << endl;
+		break;
 	}
+	return currentTile;
 }
 
 bool Board::StillHasPellets()
 {
-	return numPellets > 0;
+	bool status = numPellets > 0;
+	if (!status) score->IncreaseScore(COMPLETE_POINTS);
+	return status;
 }
 
 bool Board::GetTile(int row, int col)

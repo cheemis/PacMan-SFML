@@ -1,12 +1,6 @@
 #pragma once
+
 #include "Dependencies.h"
-
-
-string FONT_NAME = "Retronoid.otf";
-float FONT_TITLE_SIZE = 64;
-float FONT_REGULAR_SIZE = 28;
-float TEXT_SPACER = 10;
-
 
 // ========================================
 // ========= UI Class Definitions =========
@@ -33,7 +27,7 @@ public:
 		}
 	}
 
-	Text GetText()
+	virtual Text GetText()
 	{
 		Text text;
 
@@ -56,65 +50,29 @@ public:
 
 };
 
-class ScoreBoard : public MyUI
-{
-protected:
-	float minSize;
-	float maxSize;
-	int playerOneScore;
-	int playerTwoScore;
-	float timeToShow;
-	bool showingScore;
-	Vector2f scorePosition;
-	Vector2f home;
+// ========================================
+// ======== Score Class Definitions =======
+// ========================================
 
+class MyScore : public MyUI
+{
+private:
+	int score;
 
 public:
-	ScoreBoard(float size, float maxSize, Color color, Vector2f position, Vector2f scorePosition) :
-		MyUI("0 | 0", size, color, position),
-		minSize(size),
-		maxSize(maxSize),
-		playerOneScore(0),
-		playerTwoScore(0),
-		timeToShow(0),
-		showingScore(false),
-		scorePosition(scorePosition),
-		home(position)
+	MyScore(String string, float size, Color color, Vector2f position) :
+		MyUI(string, size, color, position),
+		score(0){}
+
+	void IncreaseScore(int points)
 	{
-		this->color.a = 50;
+		score += points;
+		SetText("Score:\n" + to_string(score));
 	}
 
-	void UpdateScore(bool playerOneScored)
+	void ResetScore()
 	{
-		/*
-		if (playerOneScored) playerOneScore++;
-		else playerTwoScore++;
-
-		SetText(to_string(playerOneScore) + " | " + to_string(playerTwoScore));
-
-		//display score
-		showingScore = true;
-		timeToShow = TIME_BETWEEN_ROUNDS; //clean up later
-		position = scorePosition;
-		size = maxSize;
-		color.a = 255;
-		*/
+		score = 0;
+		SetText("Score:\n0");
 	}
-
-	void Update(float deltaTime)
-	{
-		if (showingScore)
-		{
-			if (timeToShow < 0)
-			{
-				showingScore = false;
-				position = home;
-				size = minSize;
-				color.a = 50;
-			}
-			timeToShow -= deltaTime;
-		}
-	}
-
-
 };

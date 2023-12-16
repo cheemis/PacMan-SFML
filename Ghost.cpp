@@ -16,6 +16,7 @@ void Ghost::ChangeTargetCell()
 		Vector2i newTargetTile = GetGoal();
 		bool foundPath = AStar(targetTile, newTargetTile);
 		randomPathing = true;
+		isDead = false;
 
 		while(!foundPath)
 		{
@@ -38,7 +39,6 @@ void Ghost::ChangeTargetCell()
 		targetTile = newTarget;
 		percentage = 0;
 	}
-	
 }
 
 
@@ -122,7 +122,7 @@ void Ghost::FindPath(Vector2i goal, map<string, Node>& fScores)
 	stack<Node> nodeStack;
 
 	//if ghost should complete full path search
-	if (randomPathing)
+	if (randomPathing || isDead)
 	{
 		while (current.previous)
 		{
@@ -152,9 +152,31 @@ void Ghost::FindPath(Vector2i goal, map<string, Node>& fScores)
 	}
 }
 
-Vector2i Ghost::GetGoal()
+Vector2i Ghost ::GetGoal()
 {
-	switch (ghostType)
+	int pathing;
+	float randInt = ((1.0f * rand()) / RAND_MAX);
+
+	//check if blinking
+	if (fleeingTime > 0) pathing = 3;
+	else
+	{
+		//regular pathing
+		if (ghostType == 3) //for inky
+		{
+			pathing = (int)randInt % 3;
+		}
+		else //change to go random
+		{
+			if (randInt * 100 < CHANCE_TO_RANDOM) pathing = 2;
+			else pathing = ghostType;
+		}
+	}
+
+	
+
+
+	switch (pathing)
 	{
 	case(0): //Blinky (red)
 		return pacman->GetCurrentTile();
@@ -163,10 +185,10 @@ Vector2i Ghost::GetGoal()
 		return FindValidTileNear(pacman->GetCurrentTile(),
 								 -pacman->GetDirection(), 5);
 		break;
-	case(2): //Inky (cyan)
-		return FindValidTileNear(pacman->GetCurrentTile(),
-								 pacman->GetDirection(), 5);
-	case(3): //Clyde (orange)
+	case(2): //Clyde (orange)
+		return GetRandomSpace();
+		
+	case(3): //fleeing
 		return GetRandomSpace();
 		break;
 	}
@@ -176,7 +198,8 @@ void Ghost::ResetEntity(Vector2i newHome, Board* newBoard)
 {
 	Entity::ResetEntity(newHome, newBoard);
 	while (!path.empty()) path.pop();
-
+	isDead = false;
+	fleeingTime = 0;
 }
 
 Vector2i Ghost::GetRandomSpace()
@@ -194,18 +217,57 @@ Vector2i Ghost::GetRandomSpace()
 }
 
 
-
 // ========== Collision Functions ========== //
 
 void Ghost::CheckCollision()
 {
-	Vector2f pacLocation = pacman->GetPosition();
-	float pacRadius = pacman->GetRadius();
-	float distanceSquared = pow(pacLocation.x - position.x, 2) + pow(pacLocation.y - position.y, 2);
-	if (distanceSquared - pow(pacRadius + radius, 2) < 0)
+	//only do collision checks if not dead
+	if (!isDead)
 	{
-		pacman->SetIsAlive(false);
+		Vector2f pacLocation = pacman->GetPosition();
+		float pacRadius = pacman->GetRadius();
+		float distanceSquared = pow(pacLocation.x - position.x, 2) + pow(pacLocation.y - position.y, 2);
+		if (distanceSquared - pow(pacRadius + radius, 2) < 0)
+		{
+			//if not fleeing, kill pacman
+			if (fleeingTime <= 0)
+			{
+				pacman->SetIsAlive(false);
+			}
+			//else, route back to spawn
+			else
+			{
+				fleeingTime = 0;
+				isDead = true;
+				while (!path.empty()) path.pop();
+				AStar(targetTile, home);
+
+				score->IncreaseScore(GHOST_POINTS);
+			}
+		}
 	}
+}
+
+// =========== Fleeing Functions =========== //
+
+void Ghost::CheckFleeing(float deltaTime)
+{
+	if (fleeingTime <= 0)
+	{
+		if (pacman->GetRecentlyEaten() == 3) //if pacman ate a power pellet
+		{
+			StartFleeing();
+		}
+	}
+	else
+	{
+		fleeingTime -= deltaTime;
+	}
+}
+
+void Ghost::StartFleeing()
+{
+	fleeingTime = FLEEING_TIME;
 }
 
 
@@ -239,4 +301,39 @@ void Ghost::Update(float deltaTime)
 {
 	UpdatePosition(deltaTime);
 	CheckCollision();
+	CheckFleeing(deltaTime);
+}
+
+
+CircleShape Ghost::GetShape()
+{
+	CircleShape shape(radius);
+
+	//setting color
+	Color ghostColor = color;
+
+
+	//if is dead
+	if (isDead) ghostColor = DEAD_COLOR;
+
+	//if fleeing
+	else if (fleeingTime > 0)
+	{
+		//if blinking
+		if (fleeingTime < FLASHING_TIME)
+		{
+			//blink
+			if (((int)(fleeingTime * FLASHING_TIME) % 2)) ghostColor = Color::White;
+			else ghostColor = FLEEING_COLOR;
+		}
+		else
+		{
+			ghostColor = FLEEING_COLOR;
+		}
+	}
+
+	shape.setFillColor(ghostColor);
+
+	shape.setPosition(position);
+	return shape;
 }

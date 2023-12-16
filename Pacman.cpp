@@ -1,12 +1,11 @@
 #include "Entity.h"
 
-
 // ========================================= //
 // =========== Private Functions =========== //
 // ========================================= //
 
 
-void Pacman::ChangeDirection()
+Vector2i Pacman::ChangeDirection()
 {
 	int newX = 0;
 	int newY = 0;
@@ -37,19 +36,17 @@ void Pacman::ChangeDirection()
 	}
 
 	//if the player pressed a key, change direction
-	if (newX || newY)
-	{
-		direction = Vector2i(newX, newY);
-	}
+	return Vector2i(newX, newY);
 
 }
 
 void Pacman::ChangeTargetCell()
 {
+	direction = ChangeDirection();
 	Vector2f futureTarget(targetTile.x + direction.x, targetTile.y + direction.y);
 	percentage = 0;
 
-	currentBoard->RemovePellet(targetTile); //remove the pellet at that location
+	recentlyEaten = currentBoard->RemovePellet(targetTile); //remove the pellet at that location
 
 	currentTile = targetTile;
 	if (currentBoard->GetTile(futureTarget.x, futureTarget.y))
@@ -90,6 +87,11 @@ Vector2i Pacman::GetDirection()
 bool Pacman::GetIsAlive()
 {
 	return isAlive;
+}
+
+int Pacman::GetRecentlyEaten()
+{
+	return recentlyEaten;
 }
 
 void Pacman::SetIsAlive(bool newState)

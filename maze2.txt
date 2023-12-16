@@ -1,28 +1,31 @@
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-x............................ x
-x.xxx.xxxxxxxxxxxxxxxxxxx.xxx x
-x xxx.....................xxx x
-x xxx.xx.xxxxxx.xxxxxx.xx.xxx x
-x ....xx.xxxxxx.xxxxxx.xx.... x
-x xxxxxx.xxx.......xxx.xxxxxx x
-x ...........xxxxx........... x
-x xx.xxx.xxxxxxxxxxxxx.xxx.xx x
-x xx........xxxxxxx........xx x
-x xx.xxxxxx.xxxxxxx.xxxxxx.xx x
-x ........................... x
-x xxxx.xxx.xxxx xxxx.xxx.xxxx x
-x xxxx.....xxx   xxx.....xxxx x
-x ....xx.xxx b   i xxx.xx.... x
-x xxx.xx.xxx p   c xxx.xx.xxx x
-x xxx.xx.xxxxxxxxxxxxx.xx.xxx x
-x .......x.....P.....x....... x
-x x.xxxxxx.xxxxxxxxx.xxxxxx.x x
-x x.........................x x
-x x.xxxx.xxxxxx.xxxxxx.xxxx.x x
-x x.xxxx.xxxxxx.xxxxxx.xxxx.x x
-x x.........................x x
-x x.xxxxxxx.xxxxxxx.xxxxxxx x x
-x ........................... x
-x xxx.xxxxxxxxx.xxxxxxxxxxxxx x
-x ........................... x
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..........................x
+x.xxx.xxxx.xxxxxx.xxxx.xxx.x
+x.xxx.xxxx.xxxxxx.xxxx.xxx.x
+x............xx............x
+x.xxxxxx.xxx.xx.xxx.xxxxxx.x
+xoxxxxxx.xxx.xx.xxx.xxxxxxox
+x.xxxx................xxxx.x
+x......xxxxxxxxxxxxxx......x
+x.xxxx................xxxx.x
+x.xxxx.xxxxx xx xxxxx.xxxx.x
+x......xx          xx......x
+x.xxxx.xx xxx  xxx xx.xxxx.x
+x.xxxx.xx x      x xx.xxxx.x
+x......   x b  i x   ......x
+x.xxxx.xx x p  c x xx.xxxx.x
+x.xxxx.xx xxxxxxxx xx.xxxx.x
+x......xx          xx......x
+x.xxxx.xx xxxxxxxx xx.xxxx.x
+x.xxxx................xxxx.x
+x......xxxxxxxxxxxxxx......x
+xx.xxx.xxxxxxxxxxxxxx.xxx.xx
+xx.xxx....... P.......xxx.xx
+xx.xxx.xxxxxxxxxxxxxx.xxx.xx
+xx.xx..................xx.xx
+xo....xxx.xxxxxxxxx.xx....ox
+x.xxx.xxx...........xx.xxx.x
+x.xxx.xxxx.xxxxxx.xxxx.xxx.x
+x.xxx......xxxxxx......xxx.x
+x.....xxxx........xxxx.....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxx

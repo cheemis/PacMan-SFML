@@ -1,161 +1,70 @@
 #include "Main.h"
 
-void StartScreen(RenderWindow& window, int& gameState, MyUI& title, MyUI& subTitle)
-{
-	if (Keyboard::isKeyPressed(Keyboard::Space))
-	{
-		gameState = 2;
-
-	}
-	else
-	{
-		window.draw(title.GetText());
-		window.draw(subTitle.GetText());
-	}
-}
-
-bool StartGame(Board *currentBoard, Pacman *pacman, Ghost ghosts[])
-{
-	if (!currentBoard->ResetBoard())
-	{
-		return false;
-	}
-	pacman->ResetEntity(currentBoard->GetStartingPosition(0), currentBoard);
-	for (int i = 0; i < 4; i++)
-	{
-		ghosts[i].ResetEntity(currentBoard->GetStartingPosition(i + 1), currentBoard);
-	}
-	return true;
-
-}
-
-
-// Return values:
-// 0: nothing significant happened
-// 1: pacman died
-// 2: the board ran out of pellets
-// 
-int PlayGame(RenderWindow& window, Board* currentBoard, Pacman* pacman, Ghost ghosts[], float deltaTime)
-{
-	//check if pacman died
-	if (!pacman->GetIsAlive())
-	{
-		return 1;
-	}
-
-	//draw the board
-	currentBoard->DrawBoard(window);
-
-	//update entities
-	pacman->Update(deltaTime);
-	for (int i = 0; i < 4; i++) ghosts[i].Update(deltaTime);
-
-	//draw entities
-	window.draw(pacman->GetShape());
-	for (int i = 0; i < 4; i++) window.draw(ghosts[i].GetShape());
-
-	if (!currentBoard->StillHasPellets()) return 2; //temp
-	return 0;
-}
-
-bool GameOutcome(int &gameState, int gameStatus, int &currentBoard,
-				 float &timeToDeath,
-				 Board boards[],
-				 Pacman *pacman, Ghost ghosts[])
-{
-	switch (gameStatus)
-	{
-	case 0: //nothing significant happened
-		break;
-	case 1: //pacman dies
-		timeToDeath = DEATH_TIME;
-		gameState = 3;
-		break;
-	case 2: // all pellets collected
-		currentBoard = (currentBoard + 1) % 3;
-		if (!StartGame(&boards[currentBoard], pacman, ghosts)) return false; //break if one of the boards has been modified
-		break;
-	default:
-		//something broke
-		return false;
-		break;
-	}
-	return true;
-}
-
-bool Dying(RenderWindow& window, Board* currentBoard, Pacman* pacman, Ghost ghosts[], float& timeToDeath,float deltaTime)
-{
-	//update management
-	timeToDeath -= deltaTime;
-
-	//update pacman
-	pacman->Dying(deltaTime);
-
-	//update entities
-	window.draw(pacman->GetShape());
-
-	if (timeToDeath <= 0)
-	{
-		//reset entities
-		pacman->ResetEntity(currentBoard->GetStartingPosition(0), currentBoard);
-		for (int i = 0; i < 4; i++)
-		{
-			ghosts[i].ResetEntity(currentBoard->GetStartingPosition(i + 1), currentBoard);
-		}
-		return true;
-	}
-	return false;
-}
-
-void GameOver()
-{
-
-}
-
 int main()
 {
 	// ============ Window Variables =========== //
 
-	RenderWindow window(VideoMode(WINDOW_SIZE, WINDOW_SIZE), "Pacman!");
-
-
-	// ============= Game Entities ============= //
-
-	Board boards[] = { Board("maze0.txt", WALL_COLOR1),
-					   Board("maze1.txt", WALL_COLOR2),
-					   Board("maze2.txt", WALL_COLOR3)};
-	int currentBoard = -1;
-
-	Pacman pacman = Pacman(500,Color::Yellow, boards[0].GetStartingPosition(0), &boards[0]);
-
-	Ghost ghosts[] = { Ghost(100, 0, Color::Red, boards[0].GetStartingPosition(1), &boards[0], &pacman),
-					   Ghost(100, 1,Color::Cyan, boards[0].GetStartingPosition(2), &boards[0], &pacman),
-					   Ghost(100, 2, Color::Magenta, boards[0].GetStartingPosition(3), &boards[0], &pacman),
-					   Ghost(100, 3, Color(255, 184,71), boards[0].GetStartingPosition(4), &boards[0], &pacman)};
+	RenderWindow window(VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Pacman!");
 
 
 	// ============== UI Variables ============= //
 
 	MyUI titleText("Pacman",
-					FONT_TITLE_SIZE,
-					Color::Yellow,
-					Vector2f(WINDOW_SIZE / 2, WINDOW_SIZE / 2.5));
+		FONT_TITLE_SIZE,
+		Color::Yellow,
+		Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2.5));
 
-	MyUI subTitle("Click Space To Play!", FONT_REGULAR_SIZE, Color::White, Vector2f(WINDOW_SIZE / 2, WINDOW_SIZE / 2));
+	MyUI subTitle("Click Space To Play!", FONT_REGULAR_SIZE, Color::White, Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2));
 
+	MyScore scoreBoard("Score:\n0",
+		FONT_REGULAR_SIZE,
+		Color::White,
+		Vector2f(COLUMNS * TILE_OFFSET + TEXT_SPACER, FONT_REGULAR_SIZE + TEXT_SPACER));
 
+	MyUI livesText("Lives:\n3",
+		FONT_REGULAR_SIZE,
+		Color::Green,
+		Vector2f(COLUMNS * TILE_OFFSET + TEXT_SPACER, LIVES_SPACER));
+
+	MyUI readyText("Ready?",
+		FONT_TITLE_SIZE,
+		Color::Yellow,
+		Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2.5));
+
+	MyUI gameOverText("Game Over",
+		FONT_TITLE_SIZE,
+		Color::Yellow,
+		Vector2f(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2.5));
+
+	// ============= Game Entities ============= //
+
+	Board boards[] = { Board("maze0.txt", WALL_COLOR1, &scoreBoard),
+					   Board("maze1.txt", WALL_COLOR2, &scoreBoard),
+					   Board("maze2.txt", WALL_COLOR3, &scoreBoard)};
+	int currentBoard = -1;
+
+	Pacman pacman = Pacman(PACMAN_SPEED,Color::Yellow, boards[0].GetStartingPosition(0), &boards[0]);
+
+	Ghost ghosts[] = { Ghost(GHOST_SPEED, 0, Color::Red, boards[0].GetStartingPosition(1), &boards[0], &pacman, &scoreBoard),
+					   Ghost(GHOST_SPEED, 1, Color::Magenta, boards[0].GetStartingPosition(3), &boards[0], &pacman, &scoreBoard),
+					   Ghost(GHOST_SPEED, 2, Color(255, 184,71), boards[0].GetStartingPosition(4), &boards[0], &pacman, &scoreBoard),
+					   Ghost(GHOST_SPEED, 3, Color::Cyan, boards[0].GetStartingPosition(2), &boards[0], &pacman, &scoreBoard)};
 
 	// =========== Managing Variables ========== //
 
 	int gameState = 1;
-	float timeToDeath = 0;
-
-
+	float timing = READY_TIME;
+	int lives = MAX_LIVES;
 
 	// =========== Initializing work =========== //
 
 	//check to see if all boards valid
-	for (int i = 0; i < 3; i++) if (!boards[i].GetFunctional()) return 0;
+	for (int i = 0; i < 3; i++)
+	{
+		if (!boards[i].GetFunctional()) return 0;
+		//boards[i].SetGhosts(ghosts);
+	}
+
 
 	//===== set time =====//
 	Clock deltaSrc;
@@ -186,32 +95,65 @@ int main()
 
 		case 1: //title screen
 			StartScreen(window, gameState, titleText, subTitle);
-			if (gameState == 2) //start the next round
+			if (gameState == 5) //start the next round
 			{
 				currentBoard = (currentBoard + 1) % 3;
 				if (!StartGame(&boards[currentBoard], &pacman, ghosts)) return 0; //break if one of the boards has been modified
+				timing = READY_TIME;
 			}
 			break;
-		case 2: //play the game
+		case 2: //playing the game
+			window.draw(scoreBoard.GetText());
+			window.draw(livesText.GetText());
 			gameStatus = PlayGame(window, &boards[currentBoard], &pacman, ghosts, deltaTime);
-			gameWorking = GameOutcome(gameState, gameStatus, currentBoard, timeToDeath, boards, &pacman, ghosts);
+			gameWorking = GameOutcome(gameState, gameStatus, timing, currentBoard, boards, &pacman, ghosts);
 			if (!gameWorking) return 0;
 			break;
-		case 3: //dying
-			if (Dying(window, &boards[currentBoard], &pacman, ghosts, timeToDeath, deltaTime))
+		case 3: //pacman is dying
+			Dying(window, //window variables
+				&boards[currentBoard], //board variables
+				gameState, //game state variables -- setting gamestate to 5
+				lives, &livesText, //lives variables
+				&pacman, ghosts, //entities
+				timing, deltaTime); //timing variabes
+			break;
+		case 4: //stage is blinking
+			//if a map has been altered, close game
+			if (!Blinking(window, //window variables
+							boards, currentBoard, //board variables
+							gameState, //game state variables -- setting gamestate to 2
+							&pacman, ghosts, //entities
+							timing, deltaTime)) //timing variabes
+							return 0;
+			break;
+
+		case 5: //ready to play
+			if (timing < 0)
 			{
 				gameState = 2;
 			}
+			else
+			{
+				timing -= deltaTime;
+			}
+			ReadyScreen(&window, &boards[currentBoard], &readyText);
 			break;
 
+		case 6: //game over
+			if (timing < 0)
+			{
+				gameState = 1; //go back to title screen
+				scoreBoard.ResetScore();
+				SetLives(3, lives, &livesText);
+				currentBoard = -1;
+			}
+			else
+			{
+				timing -= deltaTime;
+			}
+			ReadyScreen(&window, &boards[currentBoard], &gameOverText);
+			break;
 		}
-
-
-		
-		/*
-
-		*/
-
 		window.display();
 	}
 	return 0;

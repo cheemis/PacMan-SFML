@@ -2,6 +2,7 @@
 
 #include "Dependencies.h"
 #include "Board.h"
+#include "MyUI.h"
 
 
 // ========================================
@@ -33,7 +34,6 @@ struct Node
 
 class Entity
 {
-
 protected:
 	//movement variables
 	float speed;
@@ -118,7 +118,7 @@ public:
 
 
 	//getters/setters
-	CircleShape GetShape()
+	virtual CircleShape GetShape()
 	{
 		CircleShape shape(radius);
 		shape.setPosition(position);
@@ -159,22 +159,27 @@ private:
 	bool isAlive;
 	float shrinkTime;
 
+	//eating variables
+	int recentlyEaten;
+
 	//functions
-	void ChangeDirection();
+	Vector2i ChangeDirection();
 	void ChangeTargetCell();
 	
 public:
 	Pacman(float speed, Color color, Vector2i startingTile, Board* currentBoard) :
 		Entity(speed, color, startingTile, currentBoard),
-		direction(Vector2i(1,0)),
+		direction(Vector2i(0,0)),
 		isAlive(true),
-		shrinkTime(10 * DEATH_TIME/2){}
+		shrinkTime(10 * DEATH_TIME/2),
+		recentlyEaten(0) {}
 
 	void Update(float deltaTime);
 	void ResetEntity(Vector2i newHome, Board* newBoard);
 	void Dying(float deltaTime);
 
 	bool GetIsAlive();
+	int GetRecentlyEaten();
 	Vector2i GetDirection();
 
 	void SetIsAlive(bool newState);
@@ -198,6 +203,13 @@ private:
 	int ghostType;
 	bool randomPathing;
 
+	//feeling variables
+	float fleeingTime;
+	bool isDead;
+
+	//scoreboard variables
+	MyScore* score;
+
 	//prototypes
 	void ChangeTargetCell();
 
@@ -208,21 +220,32 @@ private:
 
 	string TileToString(Vector2i tile);
 	Vector2i FindValidTileNear(Vector2i pacLocation, Vector2i offset, int multiplier);
+
 	void CheckCollision();
+	void CheckFleeing(float deltaTime);
+	void StartFleeing();
+
+	
+	
 
 public:
-	Ghost(float speed, int ghostType, Color color, Vector2i startingTile, Board* currentBoard, Pacman* pacman) :
+	Ghost(float speed, int ghostType, Color color, Vector2i startingTile, Board* currentBoard, Pacman* pacman, MyScore* score) :
 		Entity(speed, color, startingTile, currentBoard),
 		pacman(pacman),
 		direction(Vector2i(0, 0)),
 		ghostType(ghostType),
-		randomPathing(ghostType == 3){};
+		randomPathing(ghostType == 3),
+		fleeingTime(0),
+		isDead(false),
+		score(score) {};
 
 	void ResetEntity(Vector2i newHome, Board* newBoard);
 
 	Vector2i GetRandomSpace();
 
 	void Update(float deltaTime);
+
+	CircleShape GetShape();
 };
 
 
