@@ -1,0 +1,31 @@
+xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x............xx............x
+x.xxxx.xxxxx.xx.xxxxx.xxxx.x
+xoxxxx.xxxxx.xx.xxxxx.xxxxox
+x.xxxx.xxxxx.xx.xxxxx.xxxx.x
+x..........................x
+x.xxxx.xx.xxxxxxxx.xx.xxxx.x
+x.xxxx.xx.xxxxxxxx.xx.xxxx.x
+x......xx....xx....xx......x
+xx xxx.xxxxx xx xxxxx.xxx xx
+xx xxx.xxxxx xx xxxxx.xxx xx
+xx xxx.xx          xx.xxx xx
+xx xxx.xx xxx--xxx xx.xxx xx
+xx xxx.xx x      x xx.xxx xx
+xx    .   x b  i x   .    xx
+xx xxx.xx x p  c x xx.xxx xx
+xx xxx.xx xxxxxxxx xx.xxx xx
+xx xxx.xx          xx.xxx xx
+xx xxx.xx xxxxxxxx xx.xxx xx
+xx xxx.xx xxxxxxxx xx.xxx xx
+x............xx............x
+x.xxxx.xxxxx.xx.xxxxx.xxxx.x
+x.xxxx.xxxxx.xx.xxxxx.xxxx.x
+xo..xx....... P.......xx..ox
+xxx.xx.xxxxxxxxxxxxxx.xx.xxx
+xxx.xx.xxxxxxxxxxxxxx.xx.xxx
+x............xx............x
+x.xxxxxxxxxx.xx.xxxxxxxxxx.x
+x.xxxxxxxxxx.xx.xxxxxxxxxx.x
+x..........................x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxx

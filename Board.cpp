@@ -78,30 +78,35 @@ bool Board::LoadBoard(string fileName)
 				if (pacman) return false;
 				pacman = true;
 				startingPositions[0] = Vector2i(col, currentRow);
+				boardCharacters[col][currentRow] = 1;
 				break;
 			case 'b': //Blinky
 				cout << 'b';
 				if (blinky) return false;
 				blinky = true;
 				startingPositions[1] = Vector2i(col, currentRow);
+				boardCharacters[col][currentRow] = 1;
 				break;
 			case 'p': //Pinky
 				cout << 'p';
 				if (pinky) return false;
 				pinky = true;
 				startingPositions[2] = Vector2i(col, currentRow);
+				boardCharacters[col][currentRow] = 1;
 				break;
 			case 'i': //Inky
 				cout << 'i';
 				if (inky) return false;
 				inky = true;
 				startingPositions[3] = Vector2i(col, currentRow);
+				boardCharacters[col][currentRow] = 1;
 				break;
 			case 'c': //Clyde
 				cout << 'c';
 				if (clyde) return false;
 				clyde = true;
 				startingPositions[4] = Vector2i(col, currentRow);
+				boardCharacters[col][currentRow] = 1;
 				break;
 			}
 		}

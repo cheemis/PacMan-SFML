@@ -144,7 +144,7 @@ int main()
 			{
 				gameState = 1; //go back to title screen
 				scoreBoard.ResetScore();
-				SetLives(3, lives, &livesText);
+				SetLives(MAX_LIVES, lives, &livesText);
 				currentBoard = -1;
 			}
 			else

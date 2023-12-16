@@ -247,13 +247,16 @@ void Ghost::CheckCollision()
 
 void Ghost::CheckFleeing(float deltaTime)
 {
-	if (pacman->GetRecentlyEaten() == 3) //if pacman ate a power pellet
+	if (!isDead)
 	{
-		StartFleeing();
-	}
-	else
-	{
-		fleeingTime -= deltaTime;
+		if (pacman->GetRecentlyEaten() == 3) //if pacman ate a power pellet
+		{
+			StartFleeing();
+		}
+		else
+		{
+			fleeingTime -= deltaTime;
+		}
 	}
 }
 
