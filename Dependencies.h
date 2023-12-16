@@ -40,9 +40,13 @@ int const COLUMNS = 28;
 float const TILE_SIZE = 15.5;
 float const TILE_OFFSET = 16.5;
 
+//pellet variables
+int const NUM_PELLETS = 240;
+int const NUM_POWER = 4;
+
 //Pacman variables
 float const PACMAN_SPEED = 500;
-int const MAX_LIVES = 3;
+int const MAX_LIVES = 4;
 
 //Ghost varaibles
 int const NUM_GHOSTS = 4;

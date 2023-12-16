@@ -21,7 +21,7 @@ int main()
 		Color::White,
 		Vector2f(COLUMNS * TILE_OFFSET + TEXT_SPACER, FONT_REGULAR_SIZE + TEXT_SPACER));
 
-	MyUI livesText("Lives:\n3",
+	MyUI livesText("Lives:\n" + to_string(MAX_LIVES),
 		FONT_REGULAR_SIZE,
 		Color::Green,
 		Vector2f(COLUMNS * TILE_OFFSET + TEXT_SPACER, LIVES_SPACER));

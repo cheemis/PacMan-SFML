@@ -201,7 +201,6 @@ private:
 
 	//ghost variables
 	int ghostType;
-	bool randomPathing;
 
 	//feeling variables
 	float fleeingTime;
@@ -234,7 +233,6 @@ public:
 		pacman(pacman),
 		direction(Vector2i(0, 0)),
 		ghostType(ghostType),
-		randomPathing(ghostType == 3),
 		fleeingTime(0),
 		isDead(false),
 		score(score) {};

@@ -49,7 +49,8 @@ void Pacman::ChangeTargetCell()
 	recentlyEaten = currentBoard->RemovePellet(targetTile); //remove the pellet at that location
 
 	currentTile = targetTile;
-	if (currentBoard->GetTile(futureTarget.x, futureTarget.y))
+	int tileVal = currentBoard->GetTile(futureTarget.x, futureTarget.y);
+	if (tileVal && tileVal != 4)
 	{
 		targetTile = Vector2i(targetTile.x + direction.x, targetTile.y + direction.y);
 	}

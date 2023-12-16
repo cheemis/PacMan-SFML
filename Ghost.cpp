@@ -15,7 +15,6 @@ void Ghost::ChangeTargetCell()
 		//recreate a new path
 		Vector2i newTargetTile = GetGoal();
 		bool foundPath = AStar(targetTile, newTargetTile);
-		randomPathing = true;
 		isDead = false;
 
 		while(!foundPath)
@@ -23,7 +22,6 @@ void Ghost::ChangeTargetCell()
 			foundPath = AStar(targetTile, GetRandomSpace());
 		}
 
-		if (ghostType != 3) randomPathing = false;
 		percentage = clamp(percentage, 0.0f, 1.0f);
 	}
 	else
@@ -66,8 +64,6 @@ bool Ghost::AStar(Vector2i start, Vector2i goal)
 		string currentID = TileToString(currentElement.tile);
 		openSet.pop();
 
-		//cout << "Current: (" << currentElement.tile.x << ", " << currentElement.tile.y << "), Score: " << currentElement.score << endl;
-
 		if (currentElement.tile.x == goal.x && currentElement.tile.y == goal.y)
 		{
 			//return the constructed path
@@ -106,7 +102,6 @@ bool Ghost::AStar(Vector2i start, Vector2i goal)
 			}
 		}
 		visited[currentID].neighbors = validNeighbors;
-		//cout << "(" << to_string(currentElement.tile.x) <<  ", " << to_string(currentElement.tile.y) << ") has " << to_string(validNeighbors) << " valid neighbors" << endl;
 	}
 	return false;
 }
@@ -122,7 +117,7 @@ void Ghost::FindPath(Vector2i goal, map<string, Node>& fScores)
 	stack<Node> nodeStack;
 
 	//if ghost should complete full path search
-	if (randomPathing || isDead)
+	if (ghostType == 2 || isDead || fleeingTime > 0)
 	{
 		while (current.previous)
 		{
@@ -252,12 +247,9 @@ void Ghost::CheckCollision()
 
 void Ghost::CheckFleeing(float deltaTime)
 {
-	if (fleeingTime <= 0)
+	if (pacman->GetRecentlyEaten() == 3) //if pacman ate a power pellet
 	{
-		if (pacman->GetRecentlyEaten() == 3) //if pacman ate a power pellet
-		{
-			StartFleeing();
-		}
+		StartFleeing();
 	}
 	else
 	{

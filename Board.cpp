@@ -14,7 +14,6 @@ bool Board::LoadBoard(string fileName)
 		pinky = false,
 		inky = false,
 		clyde = false;
-	int powerPellets = 4;
 
 	//make sure doesnt load out of bounds
 	int currentRow = 0;
@@ -66,13 +65,12 @@ bool Board::LoadBoard(string fileName)
 			case 'o': //pellet
 				cout << 'o';
 				boardCharacters[col][currentRow] = 3;
-				powerPellets --;
+				numPower++;
 				break;
 
 			case '-': //barrier
-				cout << '.';
+				cout << '-';
 				boardCharacters[col][currentRow] = 4;
-				numPellets++;
 				break;
 
 			case 'P': //Pacman
@@ -110,8 +108,13 @@ bool Board::LoadBoard(string fileName)
 		cout << endl;
 		currentRow++;
 	}
+	cout << filename << ":" << endl;
+	cout << "num pellets: " << to_string(numPellets) << endl;
+	cout << "num power: " << to_string(numPower) << endl << endl;
 	boardFile.close();
-	return pacman && blinky && pinky && inky && clyde;
+
+	return pacman && blinky && pinky && inky && clyde && 
+			numPellets == NUM_PELLETS && numPower == NUM_POWER;
 }
 
 
@@ -125,6 +128,7 @@ Board::Board(string filename, Color color, MyScore* score)
 	this->color = color;
 
 	numPellets = 0;
+	numPower = 0;
 	functionalBoard = LoadBoard(filename);
 
 	this->score = score;
@@ -138,6 +142,7 @@ Board::Board(string filename, Color color, MyScore* score)
 bool Board::ResetBoard()
 {
 	numPellets = 0;
+	numPower = 0;
 	return LoadBoard(filename);
 }
 
@@ -179,6 +184,13 @@ void Board::DrawBoard(RenderWindow& window, bool colored)
 				tile.setFillColor(POWER_COLOR);
 				window.draw(tile);
 				break;
+
+			case 4: //barrier
+				tile.setSize(Vector2f(TILE_SIZE, TILE_SIZE));
+				tile.setPosition(col * TILE_OFFSET, row * TILE_OFFSET);
+				tile.setFillColor(Color::Red);
+				window.draw(tile);
+				break;
 			}
 		}
 	}
@@ -195,12 +207,11 @@ int Board::RemovePellet(Vector2i tile)
 		score->IncreaseScore(PELLET_POINTS);
 		numPellets--;
 		boardCharacters[tile.x][tile.y] = 1;
-		cout << "Pellets left: " << numPellets << endl;
 		break;
 	case 3: //power pellet
 		score->IncreaseScore(POWER_POINTS);
+		numPower--;
 		boardCharacters[tile.x][tile.y] = 1;
-		cout << "power pellet collected!" << endl;
 		break;
 	}
 	return currentTile;
@@ -208,12 +219,12 @@ int Board::RemovePellet(Vector2i tile)
 
 bool Board::StillHasPellets()
 {
-	bool status = numPellets > 0;
+	bool status = numPellets + numPower > 0;
 	if (!status) score->IncreaseScore(COMPLETE_POINTS);
 	return status;
 }
 
-bool Board::GetTile(int row, int col)
+int Board::GetTile(int row, int col)
 {
 	row = clamp(row, 0, COLUMNS); //flipped because board is rotated 90
 	col = clamp(col, 0, ROWS);
